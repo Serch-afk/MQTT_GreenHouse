@@ -20,6 +20,7 @@
 #include "lwip/apps/mqtt.h"
 #include "lwip/tcpip.h"
 
+#include "mqtt_GreenHouse.h"
 // FIXME cleanup
 
 /*******************************************************************************
@@ -148,7 +149,7 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
  */
 static void mqtt_subscribe_topics(mqtt_client_t *client)
 {
-    static const char *topics[] = {"GreenHouse/Control#", "GreenHouse_Others/#"};
+    static const char *topics[] = {"lwip_topic/100", "greenhouse/control/#"};
     int qos[]                   = {0, 1};
     err_t err;
     int i;
@@ -306,21 +307,26 @@ static void app_thread(void *arg)
         PRINTF("Failed to obtain IP address: %d.\r\n", err);
     }
 
-    /* Publish some messages */
-    for (i = 0; i < 5;)
+    if (sys_thread_new("GreenHouseApp_task", mqttGreenHouse_App, mqtt_client, APP_THREAD_STACKSIZE, APP_THREAD_PRIO) == NULL)
     {
-        if (connected)
-        {
-            err = tcpip_callback(publish_message, NULL);
-            if (err != ERR_OK)
-            {
-                PRINTF("Failed to invoke publishing of a message on the tcpip_thread: %d.\r\n", err);
-            }
-            i++;
-        }
-
-        sys_msleep(1000U);
+        LWIP_ASSERT("mqtt_freertos_start_thread(): Task creation failed.", 0);
     }
+
+    /* Publish some messages */
+//    for (i = 0; i < 5;)
+//    {
+//        if (connected)
+//        {
+//            err = tcpip_callback(publish_message, NULL);
+//            if (err != ERR_OK)
+//            {
+//                PRINTF("Failed to invoke publishing of a message on the tcpip_thread: %d.\r\n", err);
+//            }
+//            i++;
+//        }
+//
+//        sys_msleep(1000U);
+//    }
 
     vTaskDelete(NULL);
 }
