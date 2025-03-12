@@ -14,6 +14,7 @@
 #include "app.h"
 #include "fsl_phy.h"
 #include "mqtt_freertos.h"
+#include "fsl_gpio.h"
 
 #include "lwip/opt.h"
 #include "lwip/api.h"
@@ -108,12 +109,32 @@ static void stack_init(void *arg)
     vTaskDelete(NULL);
 }
 
+static void RGB_init(void)
+{
+    /* Define the init structure for the output LED pin*/
+    gpio_pin_config_t led_config = {
+        kGPIO_DigitalOutput,
+        0,
+    };
+
+    GPIO_PortInit(GPIO, 0);
+
+    GPIO_PinInit(GPIO, 0, 0, &led_config);
+    GPIO_PinInit(GPIO, 0, 1, &led_config);
+    GPIO_PinInit(GPIO, 0, 12, &led_config);
+
+    GPIO_PinWrite(GPIO, 0, 0, 1);
+    GPIO_PinWrite(GPIO, 0, 1, 1);
+    GPIO_PinWrite(GPIO, 0, 12, 1);
+}
+
 /*!
  * @brief Main function
  */
 int main(void)
 {
     BOARD_InitHardware();
+    RGB_init();
 
     /* Initialize lwIP from thread */
     if (sys_thread_new("main", stack_init, NULL, INIT_THREAD_STACKSIZE, INIT_THREAD_PRIO) == NULL)

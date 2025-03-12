@@ -67,7 +67,7 @@ static void publish_message(void *ctx)
     mqtt_publish(mqtt_client, MsgData->topic, MsgData->payload, strlen(MsgData->payload), 1, 0, mqtt_message_published_cb, (void *)MsgData->topic);
 }
 
-void mqttGreenHouse_UpdateParams(void)
+static void mqttGreenHouse_UpdateParams(void)
 {
 	uint8_t MsgIndx;
 	uint32_t Value;

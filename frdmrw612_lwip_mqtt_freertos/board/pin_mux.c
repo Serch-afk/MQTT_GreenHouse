@@ -8,6 +8,7 @@
 #include "fsl_common.h"
 #include "pin_mux.h"
 #include "fsl_io_mux.h"
+#include "fsl_gpio.h"
 
 /* FUNCTION ************************************************************************************************************
  * 
@@ -26,6 +27,12 @@ void BOARD_InitBootPins(void) {
  *
  * END ****************************************************************************************************************/
 void BOARD_InitPins(void) {                                /*!< Function assigned for the core: Cortex-M33[cm33] */
+
+    /* Initialize GPIO0 functionality on pin GPIO_0 (pin D12) */
+   IO_MUX_SetPinMux(IO_MUX_GPIO0);
+   IO_MUX_SetPinMux(IO_MUX_GPIO1);
+   IO_MUX_SetPinMux(IO_MUX_GPIO12);
+
    IO_MUX_SetPinMux(IO_MUX_FC3_USART_DATA);
    IO_MUX_SetPinMux(IO_MUX_ENET_CLK);
    IO_MUX_SetPinMux(IO_MUX_ENET_RX);

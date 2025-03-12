@@ -9,19 +9,42 @@
  ******************************************************************************/
 #include "board.h"
 #include "lwip/apps/mqtt.h"
+#include "fsl_gpio.h"
 
 #include "mqtt_GreenHouse_cfg.h"
 /*******************************************************************************
  * Variables
  ******************************************************************************/
-static uint32_t DataSensor[enMQTT_CONTROL_Total] = {10, 50, 10, 30, 0, 1};
+static uint32_t DataSensor[enMQTT_CONTROL_Total] = {15, 50, 20, 0, 1, 1};
 static uint32_t DataConfig[enMQTT_CONTROL_Total] = {0};
 static bool NewConfig[enMQTT_CONTROL_Total] = {false};
 
-static const uint32_t DefaultValues[enMQTT_CONTROL_Total] = {10, 50, 10, 30, 0, 1};
+static const uint32_t DefaultValues[enMQTT_CONTROL_Total] = {15, 50, 20, 0, 1, 1};
 /*******************************************************************************
  * Code
  ******************************************************************************/
+static void control_LedState(void)
+{
+	static uint8_t last_state = 2;
+
+	if(DataSensor[enMQTT_CONTROL_Button] != last_state)
+	{
+		if(DataSensor[enMQTT_CONTROL_Button] == true)
+		{
+			GPIO_PinWrite(GPIO, 0, 1, 0);
+			GPIO_PinWrite(GPIO, 0, 12, 1);
+		}
+		else
+		{
+			GPIO_PinWrite(GPIO, 0, 1, 1);
+			GPIO_PinWrite(GPIO, 0, 12, 0);
+		}
+
+		last_state = DataSensor[enMQTT_CONTROL_Button];
+	}
+}
+
+
 void sensor_APP(void *arg)
 {
 	LWIP_UNUSED_ARG(arg);
@@ -68,10 +91,12 @@ void sensor_APP(void *arg)
 			if(NewConfig[SensIndx])
 			{
 				DataSensor[SensIndx] = DataConfig[SensIndx];
+				NewConfig[SensIndx] = false;
 			}
 		}
 
-	vTaskDelay(pdMS_TO_TICKS(500));
+		control_LedState();
+		vTaskDelay(pdMS_TO_TICKS(500));
 	}
 }
 
