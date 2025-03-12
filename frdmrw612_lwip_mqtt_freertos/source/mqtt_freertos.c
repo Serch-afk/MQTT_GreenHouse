@@ -21,6 +21,7 @@
 #include "lwip/tcpip.h"
 
 #include "mqtt_GreenHouse.h"
+#include "sensor.h"
 // FIXME cleanup
 
 /*******************************************************************************
@@ -82,6 +83,7 @@ static const struct mqtt_connect_client_info_t mqtt_client_info = {
 
 /*! @brief MQTT broker IP address. */
 static ip_addr_t mqtt_addr;
+static char topic_recv[100];
 
 /*! @brief Indicates connection to MQTT broker. */
 static volatile bool connected = false;
@@ -105,6 +107,8 @@ static void mqtt_topic_subscribed_cb(void *arg, err_t err)
     {
         PRINTF("Failed to subscribe to the topic \"%s\": %d.\r\n", topic, err);
     }
+
+    mqttGreenHouse_CheckSubscription(err);
 }
 
 /*!
@@ -114,6 +118,7 @@ static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len
 {
     LWIP_UNUSED_ARG(arg);
 
+    strcpy(topic_recv, topic);
     PRINTF("Received %u bytes from the topic \"%s\": \"", tot_len, topic);
 }
 
@@ -142,6 +147,8 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
     {
         PRINTF("\"\r\n");
     }
+
+    mqttGreenHouse_MessageRecv(topic_recv, (char*)data, len);
 }
 
 /*!
@@ -149,8 +156,8 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
  */
 static void mqtt_subscribe_topics(mqtt_client_t *client)
 {
-    static const char *topics[] = {"lwip_topic/100", "greenhouse/control/#"};
-    int qos[]                   = {0, 1};
+    static const char *topics[] = {"greenhouse/control/#"};
+    int qos[]                   = {0};
     err_t err;
     int i;
 
@@ -307,26 +314,16 @@ static void app_thread(void *arg)
         PRINTF("Failed to obtain IP address: %d.\r\n", err);
     }
 
-    if (sys_thread_new("GreenHouseApp_task", mqttGreenHouse_App, mqtt_client, APP_THREAD_STACKSIZE, APP_THREAD_PRIO) == NULL)
+    if (sys_thread_new("GreenHouseApp_task", mqttGreenHouse_App, mqtt_client, APP_THREAD_STACKSIZE, 1) == NULL)
     {
         LWIP_ASSERT("mqtt_freertos_start_thread(): Task creation failed.", 0);
     }
 
-    /* Publish some messages */
-//    for (i = 0; i < 5;)
-//    {
-//        if (connected)
-//        {
-//            err = tcpip_callback(publish_message, NULL);
-//            if (err != ERR_OK)
-//            {
-//                PRINTF("Failed to invoke publishing of a message on the tcpip_thread: %d.\r\n", err);
-//            }
-//            i++;
-//        }
-//
-//        sys_msleep(1000U);
-//    }
+    if (sys_thread_new("SensorApp_task", sensor_APP, NULL, APP_THREAD_STACKSIZE, 1) == NULL)
+    {
+        LWIP_ASSERT("mqtt_freertos_start_thread(): Task creation failed.", 0);
+    }
+
 
     vTaskDelete(NULL);
 }
