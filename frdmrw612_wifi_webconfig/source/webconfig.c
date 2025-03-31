@@ -17,6 +17,7 @@
 #include "timers.h"
 #include "httpsrv.h"
 #include "http_server.h"
+#include "mqtt_freertos.h"
 
 #include "fsl_debug_console.h"
 #include "webconfig.h"
@@ -440,6 +441,7 @@ static void main_task(void *arg)
     }
 
     /* Here other tasks can be created that will run the enduser app.... */
+    mqtt_freertos_run_thread(&g_BoardState.connected);
 
     /* Main Loop */
     while (1)
@@ -487,7 +489,7 @@ static uint32_t SetBoardToAP()
         while (1)
             __BKPT(0);
     }
-    g_BoardState.connected = true;
+//    g_BoardState.connected = true;
 
     char ip[16];
     WPL_GetIP(ip, 0);
@@ -586,6 +588,7 @@ static uint32_t SetBoardToClient()
             char ip[16];
             WPL_GetIP(ip, 1);
             PRINTF(" Now join that network on your device and connect to this IP: %s\r\n", ip);
+
         }
     }
     return 0;
