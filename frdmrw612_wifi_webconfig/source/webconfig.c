@@ -616,6 +616,26 @@ static uint32_t CleanUpClient()
 
     return 0;
 }
+
+static void RGB_init(void)
+{
+    /* Define the init structure for the output LED pin*/
+    gpio_pin_config_t led_config = {
+        kGPIO_DigitalOutput,
+        0,
+    };
+
+    GPIO_PortInit(GPIO, 0);
+
+    GPIO_PinInit(GPIO, 0, 0, &led_config);
+    GPIO_PinInit(GPIO, 0, 1, &led_config);
+    GPIO_PinInit(GPIO, 0, 12, &led_config);
+
+    GPIO_PinWrite(GPIO, 0, 0, 1);
+    GPIO_PinWrite(GPIO, 0, 1, 1);
+    GPIO_PinWrite(GPIO, 0, 12, 1);
+}
+
 /*!
  * @brief Main function.
  */
@@ -623,6 +643,7 @@ int main(void)
 {
     /* Initialize the hardware */
     BOARD_InitHardware();
+    RGB_init();
 
     /* Create the main Task */
     if (xTaskCreate(main_task, "main_task", 2048, NULL, configMAX_PRIORITIES - 4, &g_BoardState.mainTask) != pdPASS)

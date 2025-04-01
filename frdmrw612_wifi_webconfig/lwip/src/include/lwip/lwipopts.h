@@ -1,33 +1,13 @@
-/*
- * Copyright (c) 2001-2003 Swedish Institute of Computer Science.
+/**
+ ******************************************************************************
+ * @file    lwipopts.h
+ * This file is based on \src\include\lwip\opt.h
+ ******************************************************************************
+ * Copyright (c) 2013-2016, Freescale Semiconductor, Inc.
+ * Copyright 2016-2018, 2022 NXP
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
- * SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
- * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
- * OF SUCH DAMAGE.
- *
- * This file is part of the lwIP TCP/IP stack.
- *
- * Author: Adam Dunkels <adam@sics.se>
- *
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 #ifndef __LWIPOPTS_H__
 #define __LWIPOPTS_H__
@@ -36,15 +16,6 @@
  * NO_SYS==0: Use RTOS
  */
 #define NO_SYS 0
-
-#define CONFIG_NETWORK_HIGH_PERF 1
-
-#define MAX_SOCKETS_TCP           8
-#define MAX_LISTENING_SOCKETS_TCP 4
-#define MAX_SOCKETS_UDP           6
-#define TCP_SND_BUF_COUNT         2
-#define TCPIP_STACK_TX_HEAP_SIZE  0
-#define LWIP_COMPAT_SOCKETS       2
 
 /* Enable IGMP and MDNS */
 #define LWIP_IGMP                  1
@@ -83,7 +54,7 @@ void sys_mark_tcpip_thread(void);
 #define TCPIP_THREAD_NAME      "tcp/ip"
 #define TCPIP_THREAD_STACKSIZE 768
 #define TCPIP_THREAD_PRIO      2
-#define TCPIP_MBOX_SIZE        32
+#define TCPIP_MBOX_SIZE        64
 
 /**
  * DEFAULT_RAW_RECVMBOX_SIZE: The mailbox size for the incoming packets on a
@@ -113,7 +84,7 @@ void sys_mark_tcpip_thread(void);
  */
 #define DEFAULT_ACCEPTMBOX_SIZE 12
 
-#define DEFAULT_THREAD_STACKSIZE 200
+#define DEFAULT_THREAD_STACKSIZE 400
 #define DEFAULT_THREAD_PRIO      1
 
 #define LWIP_DEBUG       0
@@ -121,9 +92,6 @@ void sys_mark_tcpip_thread(void);
 #define SOCKETS_DEBUG    LWIP_DBG_OFF // | LWIP_DBG_MASK_LEVEL
 
 #define IP_DEBUG         LWIP_DBG_OFF
-#define IP6_DEBUG        LWIP_DBG_OFF
-#define ICMP6_DEBUG      LWIP_DBG_OFF
-#define DHCP6_DEBUG      LWIP_DBG_OFF
 #define ETHARP_DEBUG     LWIP_DBG_OFF
 #define NETIF_DEBUG      LWIP_DBG_OFF
 #define PBUF_DEBUG       LWIP_DBG_OFF
@@ -155,6 +123,10 @@ void sys_mark_tcpip_thread(void);
 #define SNMP_MSG_DEBUG   LWIP_DBG_OFF
 #define SNMP_MIB_DEBUG   LWIP_DBG_OFF
 #define DNS_DEBUG        LWIP_DBG_OFF
+
+#define IP6_DEBUG   LWIP_DBG_OFF
+#define ICMP6_DEBUG LWIP_DBG_OFF
+#define DHCP6_DEBUG LWIP_DBG_OFF
 
 #define SYS_LIGHTWEIGHT_PROT 1
 
@@ -214,7 +186,11 @@ void sys_mark_tcpip_thread(void);
  * If the application sends a lot of data out of ROM (or other static memory),
  * this should be set high.
  */
+#ifdef CONFIG_NETWORK_HIGH_PERF
+#define MEMP_NUM_PBUF 20
+#else
 #define MEMP_NUM_PBUF 10
+#endif
 
 /**
  * MEMP_NUM_TCP_PCB: the number of simulatenously active TCP connections.
@@ -239,18 +215,37 @@ void sys_mark_tcpip_thread(void);
  * for incoming packets.
  * (only needed if you use tcpip.c)
  */
+#ifdef CONFIG_NETWORK_HIGH_PERF
+#define MEMP_NUM_TCPIP_MSG_INPKT 32
+#else
 #define MEMP_NUM_TCPIP_MSG_INPKT 16
+#endif
+
+/** MEMP_NUM_TCPIP_MSG_*: the number of struct tcpip_msg, which is used
+   for sequential API communication and incoming packets. Used in
+   src/api/tcpip.c. */
+#ifdef CONFIG_NETWORK_HIGH_PERF
+#define MEMP_NUM_TCPIP_MSG_API 16
+#else
+#define MEMP_NUM_TCPIP_MSG_API 8
+#endif
+
 /**
  * MEMP_NUM_SYS_TIMEOUT: the number of simulateously active timeouts.
  * (requires NO_SYS==0)
  */
-#define MEMP_NUM_SYS_TIMEOUT 12
+#define MEMP_NUM_SYS_TIMEOUT 17
 
 /**
  * MEMP_NUM_NETBUF: the number of struct netbufs.
  * (only needed if you use the sequential API, like api_lib.c)
  */
+#ifdef CONFIG_NETWORK_HIGH_PERF
+#define MEMP_NUM_NETBUF 32
+#else
 #define MEMP_NUM_NETBUF 16
+#endif
+
 /**
  * MEMP_NUM_NETCONN: the number of struct netconns.
  * (only needed if you use the sequential API, like api_lib.c)
@@ -321,6 +316,17 @@ void sys_mark_tcpip_thread(void);
 #define TCP_MSS 1460
 
 /*
+   ---------------------------------------
+   ---------- IPv6 options ---------------
+   ---------------------------------------
+*/
+
+/**
+ * LWIP_IPV6==1: Enable IPv6
+ */
+#define LWIP_IPV6 1
+
+/*
    ---------------------------------
    ---------- RAW options ----------
    ---------------------------------
@@ -330,15 +336,12 @@ void sys_mark_tcpip_thread(void);
  */
 #define LWIP_RAW 1
 
-/*
-   ---------------------------------------
-   ---------- IPv6 options ---------------
-   ---------------------------------------
-*/
-/**
- * LWIP_IPV6==1: Enable IPv6
- */
-#define LWIP_IPV6 1
+/* Enable IPv4 Auto IP	*/
+#ifdef CONFIG_AUTOIP
+#define LWIP_AUTOIP                 1
+#define LWIP_DHCP_AUTOIP_COOP       1
+#define LWIP_DHCP_AUTOIP_COOP_TRIES 5
+#endif
 
 #define LWIP_DNS_SECURE 0
 
@@ -407,6 +410,8 @@ void sys_mark_tcpip_thread(void);
 /**
  * DNS related options, revisit later to fine tune.
  */
+#define LWIP_MDNS_RESPONDER 1
+
 #define LWIP_DNS            1
 #define DNS_TABLE_SIZE      2  // number of table entries, default 4
 #define DNS_MAX_NAME_LENGTH 64 // max. name length, default 256
