@@ -276,7 +276,7 @@ static void publish_message(void *ctx)
  */
 static void http_srv_txt(struct mdns_service *service, void *txt_userdata)
 {
-    mdns_resp_add_service_txtitem(service, "path=/", 6);
+    mdns_resp_add_service_txtitem(service, "info=MQTT_GreenHouse", 20);
 }
 
 /*!
@@ -287,7 +287,7 @@ static void enable_mdns(struct netif *netif, const char *mdns_hostname)
     LOCK_TCPIP_CORE();
     mdns_resp_init();
     mdns_resp_add_netif(netif, mdns_hostname);
-    mdns_resp_add_service(netif, mdns_hostname, "_http", DNSSD_PROTO_TCP, 80, http_srv_txt, NULL);
+    mdns_resp_add_service(netif, mdns_hostname, "_mqtt", DNSSD_PROTO_TCP, 1883, http_srv_txt, NULL);
     UNLOCK_TCPIP_CORE();
 }
 
@@ -306,7 +306,7 @@ static void app_thread(void *arg)
             err_t err;
             int i;
 
-            enable_mdns(netif, "wifi_MQTT_GreenHouse");
+            enable_mdns(netif, "MQTT_GreenHouse");
 
             PRINTF("\r\nIPv4 Address     : %s\r\n", ipaddr_ntoa(&netif->ip_addr));
             PRINTF("IPv4 Subnet mask : %s\r\n", ipaddr_ntoa(&netif->netmask));
